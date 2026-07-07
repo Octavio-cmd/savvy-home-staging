@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Savvy Scanner</title>
+<style>
+  :root { --bg:#0d0d0d; --sf:#1a1a1a; --sf2:#232323; --bd:#2e2e2e; --tx:#f0f0f0; --mu:#888; --ac:#FF6B35; --sv:#00e676; --dw:#e74c3c; }
+  * { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+  body { background:var(--bg); color:var(--tx); font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; min-height:100vh; display:flex; flex-direction:column; }
+
+  /* HEADER */
+  .hdr { padding:40px 20px 20px; text-align:center; position:relative; }
+  .hdr-gear { position:absolute; top:16px; right:16px; background:var(--sf); border:1px solid var(--bd); border-radius:10px; width:42px; height:42px; display:flex; align-items:center; justify-content:center; font-size:20px; cursor:pointer; }
+  .logo { width:72px; height:72px; background:linear-gradient(135deg,#FF6B35,#E71D36); border-radius:20px; display:flex; align-items:center; justify-content:center; font-size:36px; margin:0 auto 16px; box-shadow:0 8px 32px rgba(255,107,53,.3); }
+  .title { font-size:28px; font-weight:900; }
+  .title span { color:var(--ac); }
+  .subtitle { font-size:12px; color:var(--mu); margin-top:4px; }
+
+  /* MODULES */
+  .modules { padding:8px 20px 40px; display:flex; flex-direction:column; gap:14px; max-width:420px; margin:0 auto; width:100%; }
+  .mod { display:flex; align-items:center; gap:16px; background:var(--sf); border:1px solid var(--bd); border-radius:18px; padding:18px 20px; text-decoration:none; color:var(--tx); }
+  .mod:active { opacity:.8; }
+  .mod.products { border-left:4px solid #00e676; }
+  .mod.clothing { border-left:4px solid #0064d2; }
+  .mod.inventory { border-left:4px solid #ffab00; }
+  .mod-icon { width:52px; height:52px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:26px; flex-shrink:0; }
+  .products .mod-icon { background:rgba(0,230,118,.1); }
+  .clothing .mod-icon { background:rgba(0,100,210,.1); }
+  .inventory .mod-icon { background:rgba(255,171,0,.1); }
+  .mod-text { flex:1; }
+  .mod-name { font-size:17px; font-weight:800; margin-bottom:3px; }
+  .mod-desc { font-size:12px; color:var(--mu); line-height:1.4; }
+  .mod-arrow { font-size:20px; color:var(--mu); }
+
+  /* FOOTER */
+  .footer { text-align:center; padding:16px; font-size:11px; color:var(--bd); margin-top:auto; }
+
+  /* SETTINGS OVERLAY */
+  .ov { display:none; position:fixed; inset:0; background:rgba(0,0,0,.75); z-index:200; overflow-y:auto; }
+  .ov.on { display:block; }
+  .ov-box { background:var(--sf); border-radius:20px; margin:20px 16px 40px; padding:24px 20px; max-width:440px; margin-left:auto; margin-right:auto; }
+  .ov-hdr { display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; }
+  .ov-title { font-size:18px; font-weight:800; }
+  .ov-close { font-size:22px; background:none; border:none; color:var(--mu); cursor:pointer; padding:4px 8px; }
+
+  .cfg-section { margin-bottom:20px; }
+  .cfg-label { font-size:11px; color:var(--mu); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px; font-weight:700; }
+  .cfg-status { font-size:12px; margin-bottom:8px; font-weight:600; }
+  .cfg-input { width:100%; background:var(--sf2); border:1px solid var(--bd); border-radius:10px; padding:11px 14px; color:var(--tx); font-size:13px; font-family:monospace; outline:none; margin-bottom:8px; }
+  .cfg-btn { width:100%; padding:12px; background:linear-gradient(135deg,#FF6B35,#E71D36); color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:800; cursor:pointer; }
+  .divider { height:1px; background:var(--bd); margin:20px 0; }
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-gear" onclick="openSettings()">⚙️</div>
+  <div class="logo">🛒</div>
+  <div class="title"><span>Savvy</span> Scanner</div>
+  <div class="subtitle">powered by Robles · DWI</div>
+</div>
+
+<div class="modules">
+  <a class="mod products" href="https://octavio-cmd.github.io/product-scanner/">
+    <div class="mod-icon">📦</div>
+    <div class="mod-text">
+      <div class="mod-name">Product Scanner</div>
+      <div class="mod-desc">Scan UPCs, check eBay pricing, generate bundle listings</div>
+    </div>
+    <div class="mod-arrow">›</div>
+  </a>
+  <a class="mod clothing" href="https://octavio-cmd.github.io/clothing-shoes/">
+    <div class="mod-icon">👕</div>
+    <div class="mod-text">
+      <div class="mod-name">Clothing & Shoes</div>
+      <div class="mod-desc">Scan garments, generate SKU, take photos, export to eBay</div>
+    </div>
+    <div class="mod-arrow">›</div>
+  </a>
+  <a class="mod inventory" href="https://octavio-cmd.github.io/inventory-manager/">
+    <div class="mod-icon">📊</div>
+    <div class="mod-text">
+      <div class="mod-name">Inventory</div>
+      <div class="mod-desc">Search by barcode in Sellbrite, view pack quantities, update stock</div>
+    </div>
+    <div class="mod-arrow">›</div>
+  </a>
+</div>
+
+<div class="footer">Savvy Scanner v3.0 · Discount Wholesalers Inc.</div>
+
+<!-- SETTINGS OVERLAY -->
+<div class="ov" id="cfg-ov">
+  <div class="ov-box">
+    <div class="ov-hdr">
+      <div class="ov-title">⚙️ Settings</div>
+      <button class="ov-close" onclick="closeSettings()">✕</button>
+    </div>
+
+    <!-- Claude -->
+    <div class="cfg-section">
+      <div class="cfg-label">🤖 Claude API Key (Anthropic)</div>
+      <div class="cfg-status" id="st-claude">⏳ Loading...</div>
+      <input class="cfg-input" id="in-claude" type="password" placeholder="sk-ant-api03-...">
+      <button class="cfg-btn" onclick="saveField('claude','in-claude','st-claude','CLAUDE_KEY')">Save Claude Key</button>
+    </div>
+    <div class="divider"></div>
+
+    <!-- ImgBB -->
+    <div class="cfg-section">
+      <div class="cfg-label">🖼️ ImgBB API Key</div>
+      <div class="cfg-status" id="st-imgbb">⏳ Loading...</div>
+      <input class="cfg-input" id="in-imgbb" type="password" placeholder="ImgBB key...">
+      <button class="cfg-btn" onclick="saveField('imgbb','in-imgbb','st-imgbb','IMGBB_KEY')">Save ImgBB Key</button>
+    </div>
+    <div class="divider"></div>
+
+    <!-- Google Sheets -->
+    <div class="cfg-section">
+      <div class="cfg-label">📋 Google Sheets Webhook URL</div>
+      <div class="cfg-status" id="st-sheets">⏳ Loading...</div>
+      <input class="cfg-input" id="in-sheets" type="text" placeholder="https://script.google.com/macros/s/...">
+      <button class="cfg-btn" onclick="saveField('sheets_url','in-sheets','st-sheets','SHEETS_URL')">Save Sheets URL</button>
+    </div>
+    <div class="divider"></div>
+
+    <!-- Google Drive -->
+    <div class="cfg-section">
+      <div class="cfg-label">📁 Google Drive URL</div>
+      <div class="cfg-status" id="st-drive">⏳ Loading...</div>
+      <input class="cfg-input" id="in-drive" type="text" placeholder="https://drive.google.com/drive/...">
+      <button class="cfg-btn" onclick="saveField('drive_url','in-drive','st-drive','DRIVE_URL')">Save Drive URL</button>
+    </div>
+    <div class="divider"></div>
+
+    <!-- eBay App ID -->
+    <div class="cfg-section">
+      <div class="cfg-label">🛒 eBay App ID</div>
+      <div class="cfg-status" id="st-ebay">✅ Hardcoded in modules</div>
+      <input class="cfg-input" value="StevenGa-SavvySca-PRD-81addb012-655f2649" readonly style="opacity:.5">
+    </div>
+
+  </div>
+</div>
+
+<script>
+const SAVVY_CONFIG = 'https://savvy-config-production.up.railway.app';
+let _cfg = {};
+let _loaded = false;
+
+(async function loadConfig() {
+  try {
+    const r = await fetch(SAVVY_CONFIG + '/config');
+    if (r.ok) _cfg = await r.json();
+  } catch(e) { console.warn('Could not load config'); }
+  _loaded = true;
+  updateAllStatus();
+})();
+
+function updateAllStatus() {
+  setStatus('st-claude',  _cfg.claude);
+  setStatus('st-imgbb',   _cfg.imgbb);
+  setStatus('st-sheets',  _cfg.sheets_url);
+  setStatus('st-drive',   _cfg.drive_url);
+}
+
+function setStatus(id, val) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (val) {
+    el.textContent = '✅ Configured';
+    el.style.color = 'var(--sv)';
+  } else {
+    el.textContent = '❌ Not configured';
+    el.style.color = 'var(--dw)';
+  }
+}
+
+function openSettings() {
+  if (!_loaded) { setTimeout(openSettings, 300); return; }
+  updateAllStatus();
+  document.getElementById('cfg-ov').classList.add('on');
+}
+
+function closeSettings() {
+  document.getElementById('cfg-ov').classList.remove('on');
+}
+
+function saveField(cfgKey, inputId, statusId, envKey) {
+  const val = document.getElementById(inputId).value.trim();
+  if (!val) { alert('Please enter a value first.'); return; }
+  _cfg[cfgKey] = val;
+  setStatus(statusId, val);
+  document.getElementById(inputId).value = '';
+  alert('✅ Saved for this session.\n\nTo make it permanent, update ' + envKey + ' in Railway savvy-config Variables.');
+}
+</script>
+</body>
+</html>
