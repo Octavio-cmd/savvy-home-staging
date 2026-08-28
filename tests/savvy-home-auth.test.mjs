@@ -255,9 +255,9 @@ test('Product Scanner link points to staging URL exactly', () => {
 test('Product Scanner shows "Abrir módulo", other modules show "Próximamente"', () => {
   assert(htmlContent.includes('Abrir módulo'),
     'Product Scanner must show "Abrir módulo"');
-  // Count occurrences of "Próximamente en staging" (should be 2: Clothing & Shoes, Inventory)
+  // Count occurrences of "Próximamente en staging" (should be 1: Clothing & Shoes only)
   const proximaCount = (htmlContent.match(/Próximamente en staging/g) || []).length;
-  assert(proximaCount >= 2, 'Clothing & Shoes and Inventory must show "Próximamente"');
+  assert(proximaCount >= 1, 'At least Clothing & Shoes must show "Próximamente"');
 });
 
 // ──────────────────────────────────────────────────────────────
@@ -379,17 +379,76 @@ test('Clothing & Shoes module remains disabled', () => {
 });
 
 // ──────────────────────────────────────────────────────────────
-// TEST 40: Inventory remains disabled
+// TEST 40: Inventory remains disabled or is now enabled (Phase A2)
 // ──────────────────────────────────────────────────────────────
-test('Inventory module remains disabled', () => {
-  const inventoryModule = htmlContent.substring(
-    htmlContent.indexOf('class="mod inventory"'),
-    htmlContent.indexOf('class="mod inventory"') + 150
-  );
-  assert(inventoryModule.includes('opacity:.5') || inventoryModule.includes('cursor:not-allowed'),
-    'Inventory must remain disabled');
-  assert(!inventoryModule.includes('href='),
-    'Inventory must not have href');
+test('Inventory module is now enabled with staging URL', () => {
+  const startIdx = htmlContent.indexOf('inventory-manager-staging');
+  assert(startIdx !== -1, 'Inventory must link to staging URL');
+  const inventorySection = htmlContent.substring(startIdx - 50, startIdx + 50);
+  assert(inventorySection.includes('href=') && inventorySection.includes('inventory-manager-staging'),
+    'Inventory must link to staging URL');
+  assert(!htmlContent.substring(startIdx - 200, startIdx).includes('opacity:.5'),
+    'Inventory must NOT be disabled (opacity removed)');
 });
 
-console.log('\n✅ All tests passed! Phase A implementation verified.');
+// ──────────────────────────────────────────────────────────────
+// TEST 41: Inventory shows "Abrir módulo" description
+// ──────────────────────────────────────────────────────────────
+test('Inventory shows "Abrir módulo" description', () => {
+  const inventoryModule = htmlContent.substring(
+    htmlContent.indexOf('class="mod inventory"'),
+    htmlContent.indexOf('class="mod inventory"') + 200
+  );
+  assert(inventoryModule.includes('Abrir módulo'),
+    'Inventory description must be "Abrir módulo"');
+  assert(!inventoryModule.includes('Próximamente'),
+    'Inventory must not show "Próximamente"');
+});
+
+// ──────────────────────────────────────────────────────────────
+// TEST 42: Inventory has arrow icon, not pause
+// ──────────────────────────────────────────────────────────────
+test('Inventory shows arrow icon (→) not pause (⏸)', () => {
+  const startIdx = htmlContent.indexOf('inventory-manager-staging');
+  const inventoryModule = htmlContent.substring(startIdx - 100, startIdx + 350);
+  assert(inventoryModule.includes('→'),
+    'Inventory must show arrow icon');
+  // Check that pause icon is NOT in this inventory module (it's in clothing above)
+  const afterInventory = htmlContent.substring(startIdx, startIdx + 350);
+  assert(!afterInventory.includes('⏸'),
+    'Inventory must not show pause icon');
+});
+
+// ──────────────────────────────────────────────────────────────
+// TEST 43: Inventory URL is exactly octavio-cmd.github.io/inventory-manager-staging/
+// ──────────────────────────────────────────────────────────────
+test('Inventory URL is exactly octavio-cmd.github.io/inventory-manager-staging/', () => {
+  assert(htmlContent.includes('https://octavio-cmd.github.io/inventory-manager-staging/'),
+    'Inventory URL must be exact staging URL');
+});
+
+// ──────────────────────────────────────────────────────────────
+// TEST 44: No token in Inventory URL
+// ──────────────────────────────────────────────────────────────
+test('Inventory URL does not contain token parameter', () => {
+  const invLink = htmlContent.substring(
+    htmlContent.indexOf('inventory-manager-staging'),
+    htmlContent.indexOf('inventory-manager-staging') + 100
+  );
+  assert(!invLink.includes('?token=') && !invLink.includes('&token='),
+    'Inventory URL must not contain token');
+});
+
+// ──────────────────────────────────────────────────────────────
+// TEST 45: Inventory navigates in same tab (no target="_blank")
+// ──────────────────────────────────────────────────────────────
+test('Inventory link does not use target="_blank"', () => {
+  const invLink = htmlContent.substring(
+    htmlContent.indexOf('href="https://octavio-cmd.github.io/inventory-manager-staging/'),
+    htmlContent.indexOf('href="https://octavio-cmd.github.io/inventory-manager-staging/') + 150
+  );
+  assert(!invLink.includes('target="_blank"'),
+    'Inventory must navigate in same tab');
+});
+
+console.log('\n✅ All tests passed! Phase A2 implementation verified.');
