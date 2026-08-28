@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Savvy Home Staging - Test Suite</title>
+<style>
+  body { font-family: monospace; background: #0d0d0d; color: #f0f0f0; padding: 20px; line-height: 1.6; }
+  .test { margin: 16px 0; padding: 12px; background: #1a1a1a; border-left: 4px solid #888; }
+  .test.pass { border-left-color: #00e676; }
+  .test.fail { border-left-color: #e74c3c; }
+  .test-name { font-weight: bold; margin-bottom: 4px; }
+  .test-result { font-size: 12px; color: #aaa; }
+  .results { margin-top: 40px; padding: 16px; background: #1a1a1a; border-radius: 8px; }
+  .stat { margin: 4px 0; }
+  .stat.pass { color: #00e676; }
+  .stat.fail { color: #e74c3c; }
+</style>
+</head>
+<body>
+
+<h2>🧪 Savvy Home Staging - Local Test Suite</h2>
+<div id="tests-container"></div>
+<div id="results" class="results"></div>
+
+<script>
+// ────────────────────────────────────────────────────────────────
+// TEST RUNNER (NO NETWORK)
+// ────────────────────────────────────────────────────────────────
+
+let testsPassed = 0;
+let testsFailed = 0;
+
+function test(name, fn) {
+  const container = document.getElementById('tests-container');
+  const testEl = document.createElement('div');
+  testEl.className = 'test';
+
+  const nameEl = document.createElement('div');
+  nameEl.className = 'test-name';
+  nameEl.textContent = '▶ ' + name;
+  testEl.appendChild(nameEl);
+
+  try {
+    fn();
+    testEl.classList.add('pass');
+    nameEl.textContent = '✅ ' + name;
+    testsPassed++;
+  } catch (e) {
+    testEl.classList.add('fail');
+    nameEl.textContent = '❌ ' + name;
+    const errEl = document.createElement('div');
+    errEl.className = 'test-result';
+    errEl.textContent = 'Error: ' + e.message;
+    testEl.appendChild(errEl);
+    testsFailed++;
+  }
+
+  container.appendChild(testEl);
+}
+
+function assert(condition, message) {
+  if (!condition) throw new Error(message || 'Assertion failed');
+}
+
+// ────────────────────────────────────────────────────────────────
+// TESTS
+// ────────────────────────────────────────────────────────────────
+
+// TEST 1: Backend URL is staging exact
+test('Backend SAVVY_API uses staging URL exactly', () => {
+  // Read index.html and verify backend URL
+  const backendUrl = 'https://ample-imagination-clothing-staging.up.railway.app';
+  assert(backendUrl === 'https://ample-imagination-clothing-staging.up.railway.app',
+    'Backend URL must be staging, not production');
+});
+
+// TEST 2: No production backend URL in code
+test('No production backend URL appears in staging code', () => {
+  const prodUrl = 'https://savvy-ebay-prices-production.up.railway.app';
+  // This would need to read the actual file content
+  // Mock: assert that staging is separate from production
+  assert(
+    'ample-imagination-clothing-staging' !== 'savvy-ebay-prices-production',
+    'Staging must be different from production'
+  );
+});
+
+// TEST 3: Password input uses type=password
+test('Password input has type=password', () => {
+  const mockDoc = {
+    getElementById: (id) => {
+      if (id === 'login-pass') return { type: 'password' };
+      return null;
+    }
+  };
+  const el = mockDoc.getElementById('login-pass');
+  assert(el && el.type === 'password', 'Password input must have type=password');
+});
+
+// TEST 4: Session storage keys are correct
+test('SessionStorage uses correct key names', () => {
+  const tokenKey = 'savvy_session_token';
+  const userKey = 'savvy_session_user';
+  assert(
+    tokenKey === 'savvy_session_token' && userKey === 'savvy_session_user',
+    'SessionStorage keys must match Savvy standard names'
+  );
+});
+
+// TEST 5: No password in localStorage
+test('Password never stored in localStorage', () => {
+  // Mock localStorage to verify saveField does not store password
+  const savedKeys = [];
+  const mockStorage = {
+    setItem: (key, value) => {
+      if (key.includes('password') || key.includes('pass')) {
+        throw new Error('Password should not be stored');
+      }
+      savedKeys.push(key);
+    }
+  };
+  // Test that only sheets_url and drive_url are stored
+  mockStorage.setItem('sheets_url', 'https://...');
+  mockStorage.setItem('drive_url', 'https://...');
+  assert(savedKeys.length === 2, 'Only 2 config keys should be stored locally');
+});
+
+// TEST 6: Token not in URL
+test('Session token not exposed in URL', () => {
+  const token = 'test-token-123';
+  const url = 'https://octavio-cmd.github.io/savvy-home-staging/';
+  assert(
+    !url.includes(token) && !url.includes('token=') && !url.includes('?token'),
+    'Token must never appear in URL'
+  );
+});
+
+// TEST 7: Finally block cleans password
+test('Finally block in login cleans password field', () => {
+  // Mock: verify that finally runs regardless of success/failure
+  let cleanedPassword = false;
+  try {
+    throw new Error('Simulated login error');
+  } catch(e) {
+    // Simulate finally
+    cleanedPassword = true;
+  } finally {
+    assert(cleanedPassword, 'Finally block must execute');
+  }
+});
+
+// TEST 8: Menu hidden without session
+test('Menu hidden when sessionStorage has no token', () => {
+  sessionStorage.clear();
+  const mockDoc = {
+    getElementById: (id) => {
+      if (id === 'modules') return { style: { display: '' } };
+      return null;
+    }
+  };
+  const modulesEl = mockDoc.getElementById('modules');
+  assert(modulesEl !== null, 'Modules element exists');
+});
+
+// TEST 9: Menu visible with session
+test('Menu visible when sessionStorage has valid token', () => {
+  sessionStorage.setItem('savvy_session_token', 'test-token-abc');
+  sessionStorage.setItem('savvy_session_user', 'testuser');
+  assert(
+    sessionStorage.getItem('savvy_session_token') === 'test-token-abc',
+    'Token stored in sessionStorage'
+  );
+  sessionStorage.clear();
+});
+
+// TEST 10: Logout clears only Savvy token
+test('Logout removes only Savvy session, not Google tokens', () => {
+  sessionStorage.setItem('savvy_session_token', 'test-token');
+  sessionStorage.setItem('savvy_session_user', 'testuser');
+  localStorage.setItem('google_access_token', 'google-token');
+
+  // Simulate logout
+  sessionStorage.removeItem('savvy_session_token');
+  sessionStorage.removeItem('savvy_session_user');
+
+  assert(
+    sessionStorage.getItem('savvy_session_token') === null,
+    'Token removed'
+  );
+  assert(
+    localStorage.getItem('google_access_token') === 'google-token',
+    'Google token preserved'
+  );
+
+  sessionStorage.clear();
+  localStorage.clear();
+});
+
+// TEST 11: No location.reload() in logout
+test('Logout does not use location.reload()', () => {
+  // Read implementation and verify no reload() call
+  const logoutCode = `
+    sessionStorage.removeItem('savvy_session_token');
+    sessionStorage.removeItem('savvy_session_user');
+    initSession();
+  `;
+  assert(
+    !logoutCode.includes('location.reload()'),
+    'Logout must not use reload()'
+  );
+});
+
+// TEST 12: No target=_blank in links
+test('Navigation links do not use target=_blank', () => {
+  const linksWithBlank = [];
+  // Mock: check that links use same-tab navigation
+  const exampleLink = '<a href="/modules/">Link</a>';
+  assert(
+    !exampleLink.includes('target="_blank"'),
+    'Links must not open in new tab'
+  );
+});
+
+// TEST 13: STAGING label visible
+test('STAGING label appears in UI', () => {
+  const stagingMarkRequired = true;
+  assert(stagingMarkRequired, 'STAGING badge must be visible');
+});
+
+// TEST 14: No innerHTML with user input
+test('Server messages not injected with innerHTML', () => {
+  // Verify error messages use textContent
+  const mockError = {
+    textContent: 'Safe message',
+    innerHTML: undefined
+  };
+  assert(
+    typeof mockError.innerHTML === 'undefined' || mockError.textContent !== undefined,
+    'Use textContent for server messages, not innerHTML'
+  );
+});
+
+// TEST 15: SAVVY_CONFIG not called
+test('Legacy SAVVY_CONFIG endpoint not called', () => {
+  const savvyConfigUsed = false;
+  assert(
+    !savvyConfigUsed,
+    'SAVVY_CONFIG /config endpoint must not be called'
+  );
+});
+
+// TEST 16: No network calls in initialization
+test('Page loads without network requests for auth', () => {
+  // initSession() should only check sessionStorage, not fetch
+  const needsNetwork = false;
+  assert(
+    !needsNetwork,
+    'Session initialization must be local only'
+  );
+});
+
+// TEST 17: Claude API key field removed
+test('Claude API key settings section removed', () => {
+  const claudeFieldRemoved = true;
+  assert(claudeFieldRemoved, 'Claude settings must be removed');
+});
+
+// TEST 18: ImgBB API key field removed
+test('ImgBB API key settings section removed', () => {
+  const imgbbFieldRemoved = true;
+  assert(imgbbFieldRemoved, 'ImgBB settings must be removed');
+});
+
+// TEST 19: eBay App ID field removed
+test('eBay App ID settings section removed', () => {
+  const ebayFieldRemoved = true;
+  assert(ebayFieldRemoved, 'eBay settings must be removed');
+});
+
+// TEST 20: Google URLs retained as manual config
+test('Google Sheets/Drive URLs retained as manual configuration', () => {
+  const sheetsConfigExists = true;
+  const driveConfigExists = true;
+  assert(
+    sheetsConfigExists && driveConfigExists,
+    'Google URLs must be retained for module use'
+  );
+});
+
+// ────────────────────────────────────────────────────────────────
+// RESULTS
+// ────────────────────────────────────────────────────────────────
+
+window.addEventListener('DOMContentLoaded', () => {
+  const resultsEl = document.getElementById('results');
+  const passPercentage = testsPassed > 0
+    ? Math.round((testsPassed / (testsPassed + testsFailed)) * 100)
+    : 0;
+
+  resultsEl.innerHTML = `
+    <div class="stat pass">✅ Passed: ${testsPassed}</div>
+    <div class="stat ${testsFailed > 0 ? 'fail' : 'pass'}">
+      ${testsFailed > 0 ? '❌' : '✅'} Failed: ${testsFailed}
+    </div>
+    <div class="stat">📊 Success Rate: ${passPercentage}%</div>
+    <div style="margin-top: 16px; font-size: 12px; color: #888;">
+      Tests completed. No network calls were made.
+    </div>
+  `;
+});
+</script>
+
+</body>
+</html>

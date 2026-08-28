@@ -242,23 +242,22 @@ test('saveField function removed', () => {
 });
 
 // ──────────────────────────────────────────────────────────────
-// TEST 26: Module links disabled (not href)
+// TEST 26: Product Scanner link enabled with staging URL
 // ──────────────────────────────────────────────────────────────
-test('Module links converted to disabled divs', () => {
-  assert(!htmlContent.includes('href="https://octavio-cmd.github.io/product-scanner"'),
-    'Product Scanner link must be disabled');
-  assert(!htmlContent.includes('href="https://octavio-cmd.github.io/clothing-shoes"'),
-    'Clothing & Shoes link must be disabled');
-  assert(!htmlContent.includes('href="https://octavio-cmd.github.io/inventory-manager"'),
-    'Inventory link must be disabled');
+test('Product Scanner link points to staging URL exactly', () => {
+  assert(htmlContent.includes('href="https://octavio-cmd.github.io/product-scanner-staging/"'),
+    'Product Scanner must link to staging URL');
 });
 
 // ──────────────────────────────────────────────────────────────
-// TEST 27: Staging placeholder text in modules
+// TEST 27: Product Scanner shows "Abrir módulo" and others disabled
 // ──────────────────────────────────────────────────────────────
-test('Modules show "Próximamente en staging" message', () => {
-  assert(htmlContent.includes('Próximamente en staging'),
-    'Modules must show staging placeholder');
+test('Product Scanner shows "Abrir módulo", other modules show "Próximamente"', () => {
+  assert(htmlContent.includes('Abrir módulo'),
+    'Product Scanner must show "Abrir módulo"');
+  // Count occurrences of "Próximamente en staging" (should be 2: Clothing & Shoes, Inventory)
+  const proximaCount = (htmlContent.match(/Próximamente en staging/g) || []).length;
+  assert(proximaCount >= 2, 'Clothing & Shoes and Inventory must show "Próximamente"');
 });
 
 // ──────────────────────────────────────────────────────────────
@@ -331,6 +330,66 @@ test('DOMContentLoaded event triggers initSession', () => {
 test('Authenticated header shows username', () => {
   assert(htmlContent.includes('hdr-username'),
     'Header must show username when authenticated');
+});
+
+// ──────────────────────────────────────────────────────────────
+// TEST 36: Product Scanner URL exact match
+// ──────────────────────────────────────────────────────────────
+test('Product Scanner URL is exactly octavio-cmd.github.io/product-scanner-staging/', () => {
+  assert(htmlContent.includes('https://octavio-cmd.github.io/product-scanner-staging/'),
+    'Product Scanner URL must be exact staging URL');
+});
+
+// ──────────────────────────────────────────────────────────────
+// TEST 37: No token in Product Scanner URL
+// ──────────────────────────────────────────────────────────────
+test('Product Scanner URL does not contain token parameter', () => {
+  const psLink = htmlContent.substring(
+    htmlContent.indexOf('product-scanner-staging'),
+    htmlContent.indexOf('product-scanner-staging') + 100
+  );
+  assert(!psLink.includes('?token=') && !psLink.includes('&token='),
+    'Product Scanner URL must not contain token');
+});
+
+// ──────────────────────────────────────────────────────────────
+// TEST 38: Product Scanner navigates in same tab (no target="_blank")
+// ──────────────────────────────────────────────────────────────
+test('Product Scanner link does not use target="_blank"', () => {
+  const psLink = htmlContent.substring(
+    htmlContent.indexOf('href="https://octavio-cmd.github.io/product-scanner-staging/'),
+    htmlContent.indexOf('href="https://octavio-cmd.github.io/product-scanner-staging/') + 150
+  );
+  assert(!psLink.includes('target="_blank"'),
+    'Product Scanner must navigate in same tab');
+});
+
+// ──────────────────────────────────────────────────────────────
+// TEST 39: Clothing & Shoes remains disabled
+// ──────────────────────────────────────────────────────────────
+test('Clothing & Shoes module remains disabled', () => {
+  const clothingModule = htmlContent.substring(
+    htmlContent.indexOf('class="mod clothing"'),
+    htmlContent.indexOf('class="mod clothing"') + 150
+  );
+  assert(clothingModule.includes('opacity:.5') || clothingModule.includes('cursor:not-allowed'),
+    'Clothing & Shoes must remain disabled');
+  assert(!clothingModule.includes('href='),
+    'Clothing & Shoes must not have href');
+});
+
+// ──────────────────────────────────────────────────────────────
+// TEST 40: Inventory remains disabled
+// ──────────────────────────────────────────────────────────────
+test('Inventory module remains disabled', () => {
+  const inventoryModule = htmlContent.substring(
+    htmlContent.indexOf('class="mod inventory"'),
+    htmlContent.indexOf('class="mod inventory"') + 150
+  );
+  assert(inventoryModule.includes('opacity:.5') || inventoryModule.includes('cursor:not-allowed'),
+    'Inventory must remain disabled');
+  assert(!inventoryModule.includes('href='),
+    'Inventory must not have href');
 });
 
 console.log('\n✅ All tests passed! Phase A implementation verified.');
