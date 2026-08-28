@@ -11,7 +11,6 @@
 
   /* HEADER */
   .hdr { padding:40px 20px 20px; text-align:center; position:relative; }
-  .hdr-gear { position:absolute; top:16px; right:16px; background:var(--sf); border:1px solid var(--bd); border-radius:10px; width:42px; height:42px; display:flex; align-items:center; justify-content:center; font-size:20px; cursor:pointer; }
   .logo { width:72px; height:72px; background:linear-gradient(135deg,#FF6B35,#E71D36); border-radius:20px; display:flex; align-items:center; justify-content:center; font-size:36px; margin:0 auto 16px; box-shadow:0 8px 32px rgba(255,107,53,.3); }
   .title { font-size:28px; font-weight:900; }
   .title span { color:var(--ac); }
@@ -36,165 +35,173 @@
   /* FOOTER */
   .footer { text-align:center; padding:16px; font-size:11px; color:var(--bd); margin-top:auto; }
 
-  /* SETTINGS OVERLAY */
-  .ov { display:none; position:fixed; inset:0; background:rgba(0,0,0,.75); z-index:200; overflow-y:auto; }
-  .ov.on { display:block; }
-  .ov-box { background:var(--sf); border-radius:20px; margin:20px 16px 40px; padding:24px 20px; max-width:440px; margin-left:auto; margin-right:auto; }
-  .ov-hdr { display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; }
-  .ov-title { font-size:18px; font-weight:800; }
-  .ov-close { font-size:22px; background:none; border:none; color:var(--mu); cursor:pointer; padding:4px 8px; }
+  /* LOGIN SCREEN */
+  .login-screen { display:none; position:fixed; inset:0; background:var(--bg); z-index:300; flex-direction:column; align-items:center; justify-content:center; padding:20px; }
+  .login-screen.show { display:flex; }
+  .login-box { background:var(--sf); border:1px solid var(--bd); border-radius:20px; padding:40px 30px; max-width:360px; width:100%; }
+  .login-title { font-size:24px; font-weight:900; margin-bottom:8px; text-align:center; }
+  .login-subtitle { font-size:12px; color:var(--mu); text-align:center; margin-bottom:24px; }
+  .login-input { width:100%; background:var(--sf2); border:1px solid var(--bd); border-radius:10px; padding:12px 14px; color:var(--tx); font-size:14px; margin-bottom:12px; outline:none; }
+  .login-input::placeholder { color:var(--mu); }
+  .login-btn { width:100%; padding:14px; background:linear-gradient(135deg,#FF6B35,#E71D36); color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:800; cursor:pointer; }
+  .login-btn:disabled { opacity:.5; cursor:not-allowed; }
+  .login-error { color:var(--dw); font-size:12px; margin-top:12px; text-align:center; display:none; }
+  .login-staging { position:absolute; top:16px; left:16px; background:rgba(255,107,53,.2); border:1px solid var(--ac); border-radius:8px; padding:6px 12px; font-size:11px; font-weight:700; color:var(--ac); }
 
-  .cfg-section { margin-bottom:20px; }
-  .cfg-label { font-size:11px; color:var(--mu); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px; font-weight:700; }
-  .cfg-status { font-size:12px; margin-bottom:8px; font-weight:600; }
-  .cfg-input { width:100%; background:var(--sf2); border:1px solid var(--bd); border-radius:10px; padding:11px 14px; color:var(--tx); font-size:13px; font-family:monospace; outline:none; margin-bottom:8px; }
-  .cfg-btn { width:100%; padding:12px; background:linear-gradient(135deg,#FF6B35,#E71D36); color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:800; cursor:pointer; }
-  .divider { height:1px; background:var(--bd); margin:20px 0; }
+  /* HEADER LOGGED IN */
+  .hdr-user { position:absolute; top:16px; right:16px; font-size:12px; color:var(--mu); }
+  .hdr-logout { background:var(--dw); color:white; border:none; padding:8px 14px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; margin-left:12px; }
+
 </style>
 </head>
 <body>
 
+<!-- LOGIN SCREEN (STAGING) -->
+<div class="login-screen show" id="login-screen">
+  <div class="login-staging">🧪 STAGING</div>
+  <div class="login-box">
+    <div class="login-title"><span style="color:var(--ac)">Savvy</span> Login</div>
+    <div class="login-subtitle">Central authentication pilot</div>
+    <input class="login-input" id="login-user" type="text" placeholder="Usuario" autocomplete="username">
+    <input class="login-input" id="login-pass" type="password" placeholder="Contraseña" autocomplete="current-password">
+    <button class="login-btn" id="login-btn" onclick="savvyLogin()">Ingresar</button>
+    <div class="login-error" id="login-error"></div>
+  </div>
+</div>
+
 <div class="hdr">
-  <div class="hdr-gear" onclick="openSettings()">⚙️</div>
+  <div class="hdr-staging" style="position:absolute;top:16px;left:16px;background:rgba(255,107,53,.2);border:1px solid var(--ac);border-radius:8px;padding:6px 12px;font-size:11px;font-weight:700;color:var(--ac);">🧪 STAGING</div>
   <div class="logo">🛒</div>
   <div class="title"><span>Savvy</span> Scanner</div>
   <div class="subtitle">powered by Robles · DWI</div>
+  <div class="hdr-user" id="hdr-user" style="display:none;">
+    <span id="hdr-username"></span>
+    <button class="hdr-logout" onclick="savvyLogout()">🚪 Salir</button>
+  </div>
 </div>
 
-<div class="modules">
-  <a class="mod products" href="https://octavio-cmd.github.io/product-scanner/">
+<div class="modules" id="modules" style="display:none;">
+  <div class="mod products" style="opacity:.5; cursor:not-allowed;">
     <div class="mod-icon">📦</div>
     <div class="mod-text">
       <div class="mod-name">Product Scanner</div>
-      <div class="mod-desc">Scan UPCs, check eBay pricing, generate bundle listings</div>
+      <div class="mod-desc">🧪 Próximamente en staging</div>
     </div>
-    <div class="mod-arrow">›</div>
-  </a>
-  <a class="mod clothing" href="https://octavio-cmd.github.io/clothing-shoes/">
+    <div class="mod-arrow">⏸</div>
+  </div>
+  <div class="mod clothing" style="opacity:.5; cursor:not-allowed;">
     <div class="mod-icon">👕</div>
     <div class="mod-text">
       <div class="mod-name">Clothing & Shoes</div>
-      <div class="mod-desc">Scan garments, generate SKU, take photos, export to eBay</div>
+      <div class="mod-desc">🧪 Próximamente en staging</div>
     </div>
-    <div class="mod-arrow">›</div>
-  </a>
-  <a class="mod inventory" href="https://octavio-cmd.github.io/inventory-manager/">
+    <div class="mod-arrow">⏸</div>
+  </div>
+  <div class="mod inventory" style="opacity:.5; cursor:not-allowed;">
     <div class="mod-icon">📊</div>
     <div class="mod-text">
       <div class="mod-name">Inventory</div>
-      <div class="mod-desc">Search by barcode in Sellbrite, view pack quantities, update stock</div>
+      <div class="mod-desc">🧪 Próximamente en staging</div>
     </div>
-    <div class="mod-arrow">›</div>
-  </a>
+    <div class="mod-arrow">⏸</div>
+  </div>
 </div>
 
 <div class="footer">Savvy Scanner v3.0 · Discount Wholesalers Inc.</div>
 
-<!-- SETTINGS OVERLAY -->
-<div class="ov" id="cfg-ov">
-  <div class="ov-box">
-    <div class="ov-hdr">
-      <div class="ov-title">⚙️ Settings</div>
-      <button class="ov-close" onclick="closeSettings()">✕</button>
-    </div>
-
-    <!-- Claude -->
-    <div class="cfg-section">
-      <div class="cfg-label">🤖 Claude API Key (Anthropic)</div>
-      <div class="cfg-status" id="st-claude">⏳ Loading...</div>
-      <input class="cfg-input" id="in-claude" type="password" placeholder="sk-ant-api03-...">
-      <button class="cfg-btn" onclick="saveField('claude','in-claude','st-claude','CLAUDE_KEY')">Save Claude Key</button>
-    </div>
-    <div class="divider"></div>
-
-    <!-- ImgBB -->
-    <div class="cfg-section">
-      <div class="cfg-label">🖼️ ImgBB API Key</div>
-      <div class="cfg-status" id="st-imgbb">⏳ Loading...</div>
-      <input class="cfg-input" id="in-imgbb" type="password" placeholder="ImgBB key...">
-      <button class="cfg-btn" onclick="saveField('imgbb','in-imgbb','st-imgbb','IMGBB_KEY')">Save ImgBB Key</button>
-    </div>
-    <div class="divider"></div>
-
-    <!-- Google Sheets -->
-    <div class="cfg-section">
-      <div class="cfg-label">📋 Google Sheets Webhook URL</div>
-      <div class="cfg-status" id="st-sheets">⏳ Loading...</div>
-      <input class="cfg-input" id="in-sheets" type="text" placeholder="https://script.google.com/macros/s/...">
-      <button class="cfg-btn" onclick="saveField('sheets_url','in-sheets','st-sheets','SHEETS_URL')">Save Sheets URL</button>
-    </div>
-    <div class="divider"></div>
-
-    <!-- Google Drive -->
-    <div class="cfg-section">
-      <div class="cfg-label">📁 Google Drive URL</div>
-      <div class="cfg-status" id="st-drive">⏳ Loading...</div>
-      <input class="cfg-input" id="in-drive" type="text" placeholder="https://drive.google.com/drive/...">
-      <button class="cfg-btn" onclick="saveField('drive_url','in-drive','st-drive','DRIVE_URL')">Save Drive URL</button>
-    </div>
-    <div class="divider"></div>
-
-    <!-- eBay App ID -->
-    <div class="cfg-section">
-      <div class="cfg-label">🛒 eBay App ID</div>
-      <div class="cfg-status" id="st-ebay">✅ Hardcoded in modules</div>
-      <input class="cfg-input" value="StevenGa-SavvySca-PRD-81addb012-655f2649" readonly style="opacity:.5">
-    </div>
-
-  </div>
-</div>
-
 <script>
-const SAVVY_CONFIG = 'https://savvy-config-production.up.railway.app';
-let _cfg = {};
-let _loaded = false;
+// ── SAVVY CENTRAL LOGIN (STAGING PILOT) ──────────────────────────────
+const SAVVY_API = 'https://ample-imagination-clothing-staging.up.railway.app';
 
-(async function loadConfig() {
-  try {
-    const r = await fetch(SAVVY_CONFIG + '/config');
-    if (r.ok) _cfg = await r.json();
-  } catch(e) { console.warn('Could not load config'); }
-  _loaded = true;
-  updateAllStatus();
-})();
+// Función de inicialización
+function initSession() {
+  const token = sessionStorage.getItem('savvy_session_token');
+  const user = sessionStorage.getItem('savvy_session_user');
 
-function updateAllStatus() {
-  setStatus('st-claude',  _cfg.claude);
-  setStatus('st-imgbb',   _cfg.imgbb);
-  setStatus('st-sheets',  _cfg.sheets_url);
-  setStatus('st-drive',   _cfg.drive_url);
-}
-
-function setStatus(id, val) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  if (val) {
-    el.textContent = '✅ Configured';
-    el.style.color = 'var(--sv)';
+  if (token && user) {
+    // Usuario autenticado
+    document.getElementById('login-screen').classList.remove('show');
+    document.getElementById('modules').style.display = 'flex';
+    document.getElementById('hdr-user').style.display = 'block';
+    document.getElementById('hdr-username').textContent = '👤 ' + user;
   } else {
-    el.textContent = '❌ Not configured';
-    el.style.color = 'var(--dw)';
+    // Sin autenticación
+    document.getElementById('login-screen').classList.add('show');
+    document.getElementById('modules').style.display = 'none';
+    document.getElementById('hdr-user').style.display = 'none';
   }
 }
 
-function openSettings() {
-  if (!_loaded) { setTimeout(openSettings, 300); return; }
-  updateAllStatus();
-  document.getElementById('cfg-ov').classList.add('on');
+// Login central
+async function savvyLogin() {
+  const userEl = document.getElementById('login-user');
+  const passEl = document.getElementById('login-pass');
+  const btnEl = document.getElementById('login-btn');
+  const errEl = document.getElementById('login-error');
+
+  const usuario = userEl.value.trim();
+  const password = passEl.value;
+
+  if (!usuario || !password) {
+    errEl.textContent = '❌ Usuario y contraseña requeridos';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  btnEl.disabled = true;
+  btnEl.textContent = '⏳ Entrando...';
+  errEl.style.display = 'none';
+
+  try {
+    const response = await fetch(SAVVY_API + '/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ usuario: usuario, password: password })
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      if (data && data.token) {
+        // Guardar sesión (NO contraseña)
+        sessionStorage.setItem('savvy_session_token', data.token);
+        sessionStorage.setItem('savvy_session_user', data.usuario || usuario);
+
+        // Limpiar contraseña ANTES de reiniciar UI
+        passEl.value = '';
+
+        // Mostrar UI de autenticado
+        initSession();
+      } else {
+        errEl.textContent = '❌ Respuesta inválida del servidor';
+        errEl.style.display = 'block';
+      }
+    } else {
+      errEl.textContent = '❌ Usuario o contraseña incorrectos';
+      errEl.style.display = 'block';
+    }
+  } catch(e) {
+    errEl.textContent = '❌ Error de conexión: ' + e.message;
+    errEl.style.display = 'block';
+  } finally {
+    // SIEMPRE limpiar password (type=password y variable)
+    passEl.value = '';
+    btnEl.disabled = false;
+    btnEl.textContent = 'Ingresar';
+  }
 }
 
-function closeSettings() {
-  document.getElementById('cfg-ov').classList.remove('on');
+// Logout coordinado
+function savvyLogout() {
+  // Limpiar SOLO Savvy session
+  sessionStorage.removeItem('savvy_session_token');
+  sessionStorage.removeItem('savvy_session_user');
+
+  // Mostrar login inmediatamente
+  initSession();
 }
 
-function saveField(cfgKey, inputId, statusId, envKey) {
-  const val = document.getElementById(inputId).value.trim();
-  if (!val) { alert('Please enter a value first.'); return; }
-  _cfg[cfgKey] = val;
-  setStatus(statusId, val);
-  document.getElementById(inputId).value = '';
-  alert('✅ Saved for this session.\n\nTo make it permanent, update ' + envKey + ' in Railway savvy-config Variables.');
-}
+// Inicializar al cargar
+window.addEventListener('DOMContentLoaded', initSession);
 </script>
 </body>
 </html>
