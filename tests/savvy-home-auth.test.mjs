@@ -250,14 +250,15 @@ test('Product Scanner link points to staging URL exactly', () => {
 });
 
 // ──────────────────────────────────────────────────────────────
-// TEST 27: Product Scanner shows "Abrir módulo" and others disabled
+// TEST 27: Product Scanner and Clothing both show "Abrir módulo"
 // ──────────────────────────────────────────────────────────────
 test('Product Scanner shows "Abrir módulo", other modules show "Próximamente"', () => {
-  assert(htmlContent.includes('Abrir módulo'),
-    'Product Scanner must show "Abrir módulo"');
-  // Count occurrences of "Próximamente en staging" (should be 1: Clothing & Shoes only)
+  // Count occurrences of "Abrir módulo" (should be 3: Product Scanner, Clothing & Shoes, Inventory)
+  const abrirCount = (htmlContent.match(/Abrir módulo/g) || []).length;
+  assert(abrirCount >= 3, 'At least Product Scanner, Clothing & Shoes, and Inventory must show "Abrir módulo"');
+  // No module should show "Próximamente en staging" anymore
   const proximaCount = (htmlContent.match(/Próximamente en staging/g) || []).length;
-  assert(proximaCount >= 1, 'At least Clothing & Shoes must show "Próximamente"');
+  assert(proximaCount === 0, 'No module should show "Próximamente en staging" - all enabled modules use "Abrir módulo"');
 });
 
 // ──────────────────────────────────────────────────────────────
@@ -365,17 +366,16 @@ test('Product Scanner link does not use target="_blank"', () => {
 });
 
 // ──────────────────────────────────────────────────────────────
-// TEST 39: Clothing & Shoes remains disabled
+// TEST 39: Clothing & Shoes now enabled with staging URL
 // ──────────────────────────────────────────────────────────────
-test('Clothing & Shoes module remains disabled', () => {
-  const clothingModule = htmlContent.substring(
-    htmlContent.indexOf('class="mod clothing"'),
-    htmlContent.indexOf('class="mod clothing"') + 150
-  );
-  assert(clothingModule.includes('opacity:.5') || clothingModule.includes('cursor:not-allowed'),
-    'Clothing & Shoes must remain disabled');
-  assert(!clothingModule.includes('href='),
-    'Clothing & Shoes must not have href');
+test('Clothing & Shoes module is now enabled with staging URL', () => {
+  const startIdx = htmlContent.indexOf('clothing-shoes-staging');
+  assert(startIdx !== -1, 'Clothing & Shoes must link to staging URL');
+  const clothingSection = htmlContent.substring(startIdx - 50, startIdx + 50);
+  assert(clothingSection.includes('href=') && clothingSection.includes('clothing-shoes-staging'),
+    'Clothing & Shoes must link to staging URL');
+  assert(!htmlContent.substring(startIdx - 200, startIdx).includes('opacity:.5'),
+    'Clothing & Shoes must NOT be disabled (opacity removed)');
 });
 
 // ──────────────────────────────────────────────────────────────
@@ -451,4 +451,60 @@ test('Inventory link does not use target="_blank"', () => {
     'Inventory must navigate in same tab');
 });
 
-console.log('\n✅ All tests passed! Phase A2 implementation verified.');
+// ──────────────────────────────────────────────────────────────
+// TEST 46: Clothing & Shoes URL exact match
+// ──────────────────────────────────────────────────────────────
+test('Clothing & Shoes URL is exactly octavio-cmd.github.io/clothing-shoes-staging/', () => {
+  assert(htmlContent.includes('https://octavio-cmd.github.io/clothing-shoes-staging/'),
+    'Clothing & Shoes URL must be exact staging URL');
+});
+
+// ──────────────────────────────────────────────────────────────
+// TEST 47: No token in Clothing & Shoes URL
+// ──────────────────────────────────────────────────────────────
+test('Clothing & Shoes URL does not contain token parameter', () => {
+  const clLink = htmlContent.substring(
+    htmlContent.indexOf('clothing-shoes-staging'),
+    htmlContent.indexOf('clothing-shoes-staging') + 100
+  );
+  assert(!clLink.includes('?token=') && !clLink.includes('&token='),
+    'Clothing & Shoes URL must not contain token');
+});
+
+// ──────────────────────────────────────────────────────────────
+// TEST 48: Clothing & Shoes navigates in same tab (no target="_blank")
+// ──────────────────────────────────────────────────────────────
+test('Clothing & Shoes link does not use target="_blank"', () => {
+  const clLink = htmlContent.substring(
+    htmlContent.indexOf('href="https://octavio-cmd.github.io/clothing-shoes-staging/'),
+    htmlContent.indexOf('href="https://octavio-cmd.github.io/clothing-shoes-staging/') + 150
+  );
+  assert(!clLink.includes('target="_blank"'),
+    'Clothing & Shoes must navigate in same tab');
+});
+
+// ──────────────────────────────────────────────────────────────
+// TEST 49: Clothing & Shoes shows "Abrir módulo" description
+// ──────────────────────────────────────────────────────────────
+test('Clothing & Shoes shows "Abrir módulo" description', () => {
+  const clothingModule = htmlContent.substring(
+    htmlContent.indexOf('class="mod clothing"'),
+    htmlContent.indexOf('class="mod clothing"') + 200
+  );
+  assert(clothingModule.includes('Abrir módulo'),
+    'Clothing & Shoes description must be "Abrir módulo"');
+  assert(!clothingModule.includes('Próximamente'),
+    'Clothing & Shoes must not show "Próximamente"');
+});
+
+// ──────────────────────────────────────────────────────────────
+// TEST 50: Clothing & Shoes has arrow icon, not pause
+// ──────────────────────────────────────────────────────────────
+test('Clothing & Shoes shows arrow icon (→) not pause (⏸)', () => {
+  const startIdx = htmlContent.indexOf('clothing-shoes-staging');
+  const clothingModule = htmlContent.substring(startIdx - 100, startIdx + 350);
+  assert(clothingModule.includes('→'),
+    'Clothing & Shoes must show arrow icon');
+});
+
+console.log('\n✅ All tests passed! Phase A3 implementation verified.');
